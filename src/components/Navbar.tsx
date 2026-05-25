@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ShoppingBag, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useCartStore } from '../store/useCartStore';
 
 const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const getTotalItems = useCartStore((state) => state.getTotalItems);
+  const totalItems = getTotalItems();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -58,11 +61,16 @@ const Navbar: React.FC = () => {
           <div className="flex items-center space-x-4 ml-4">
             <Link 
               to="/cart" 
-              className={`flex items-center transition-colors duration-300 hover:text-muted-honey-gold ${
+              className={`flex items-center transition-colors duration-300 hover:text-muted-honey-gold relative ${
                 isScrolled || location.pathname !== '/' ? 'text-espresso-text' : 'text-white/90'
               }`}
             >
               <ShoppingBag className="w-5 h-5" />
+              {totalItems > 0 && (
+                <span className="absolute -top-2 -right-2 bg-muted-honey-gold text-white text-[0.65rem] font-bold w-4 h-4 flex items-center justify-center rounded-full">
+                  {totalItems}
+                </span>
+              )}
             </Link>
             <Link 
               to="/menu"
@@ -109,10 +117,17 @@ const Navbar: React.FC = () => {
                 <Link 
                   to="/cart" 
                   onClick={() => setIsMobileMenuOpen(false)}
-                  className="flex items-center space-x-2 text-espresso-text"
+                  className="flex items-center space-x-3 text-espresso-text"
                 >
-                  <ShoppingBag className="w-5 h-5" />
-                  <span className="font-medium">Cart</span>
+                  <div className="relative">
+                    <ShoppingBag className="w-5 h-5" />
+                    {totalItems > 0 && (
+                      <span className="absolute -top-2 -right-2 bg-muted-honey-gold text-white text-[0.65rem] font-bold w-4 h-4 flex items-center justify-center rounded-full">
+                        {totalItems}
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-medium">Selection ({totalItems})</span>
                 </Link>
                 <Link 
                   to="/menu"

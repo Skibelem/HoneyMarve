@@ -2,6 +2,10 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
+import Menu from './pages/Menu';
+import ProductDetail from './pages/ProductDetail';
+import Cart from './pages/Cart';
+import Catering from './pages/Catering';
 import Placeholder from './pages/Placeholder';
 
 function App() {
@@ -12,12 +16,15 @@ function App() {
         <main className="flex-grow">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/menu" element={<Placeholder title="Our Menu" />} />
-            <Route path="/cart" element={<Placeholder title="Your Cart" />} />
-            <Route path="/checkout" element={<Placeholder title="Checkout" />} />
-            <Route path="/catering" element={<Placeholder title="Catering & Events" />} />
+            <Route path="/menu" element={<Menu />} />
+            <Route path="/product/:slug" element={<ProductDetail />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/catering" element={<Catering />} />
+            
+            {/* Unbuilt Pages */}
             <Route path="/about" element={<Placeholder title="About HoneyMarve" />} />
             <Route path="/contact" element={<Placeholder title="Contact Us" />} />
+            <Route path="/checkout" element={<Placeholder title="Checkout" />} />
             
             {/* Admin Routes */}
             <Route path="/admin" element={<Placeholder title="Admin Dashboard" />} />
