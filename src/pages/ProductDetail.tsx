@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Check, AlertCircle } from 'lucide-react';
-import { PRODUCTS } from '../data/products';
+import { useProductStore } from '../store/useProductStore';
 import { useCartStore } from '../store/useCartStore';
 
 const ProductDetail: React.FC = () => {
@@ -10,8 +10,9 @@ const ProductDetail: React.FC = () => {
   const navigate = useNavigate();
   const addItem = useCartStore((state) => state.addItem);
   const items = useCartStore((state) => state.items);
+  const getProductBySlug = useProductStore((state) => state.getProductBySlug);
 
-  const product = PRODUCTS.find(p => p.slug === slug);
+  const product = slug ? getProductBySlug(slug) : undefined;
   const isInCart = product ? items.some(item => item.product.id === product.id) : false;
 
   useEffect(() => {

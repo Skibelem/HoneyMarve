@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Send, Utensils, Users, Calendar } from 'lucide-react';
 import { BUSINESS_CONFIG } from '../config/business';
 import { useCartStore } from '../store/useCartStore';
+import { useRequestStore } from '../store/useRequestStore';
 
 interface FormData {
   fullName: string;
@@ -15,7 +16,9 @@ interface FormData {
 }
 
 const Catering: React.FC = () => {
-  const { items, getTotalItems } = useCartStore();
+  const { items, getTotalItems, clearCart } = useCartStore();
+  const { addRequest } = useRequestStore();
+  
   const [formData, setFormData] = useState<FormData>({
     fullName: '',
     phone: '',
@@ -28,6 +31,7 @@ const Catering: React.FC = () => {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
+  const [reference, setReference] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -38,6 +42,25 @@ const Catering: React.FC = () => {
     e.preventDefault();
     setIsSubmitting(true);
 
+    // Save request locally
+    const newRequest = addRequest({
+      customerName: formData.fullName,
+      phoneNumber: formData.phone,
+      requestType: 'catering',
+      occasionType: formData.eventType,
+      proposedDate: formData.date,
+      estimatedGuestCount: parseInt(formData.guests, 10),
+      requestDetails: formData.description,
+      preferredContactMethod: formData.contactMethod,
+      selectedItems: items.map(item => ({
+        productId: item.product.id,
+        productName: item.product.name,
+        quantity: item.quantity
+      }))
+    });
+
+    setReference(newRequest.referenceNumber);
+
     // Build the selection list if there are items in the cart
     let selectionText = '';
     if (items.length > 0) {
@@ -45,8 +68,9 @@ const Catering: React.FC = () => {
     }
 
     // Generate structured WhatsApp message
-    const message = `Hello ${BUSINESS_CONFIG.brandName}, I would like to make a catering enquiry.
+    const message = `Hello ${BUSINESS_CONFIG.brandName}, I submitted a new enquiry through your website.
 
+*Reference:* ${newRequest.referenceNumber}
 *Name:* ${formData.fullName}
 *Phone:* ${formData.phone}
 *Occasion:* ${formData.eventType}
@@ -60,16 +84,16 @@ ${formData.description}${selectionText}
 I would like to discuss the available options. Thank you.`;
 
     const encodedMessage = encodeURIComponent(message);
-    const targetNumber = BUSINESS_CONFIG.whatsappNumber || '2340000000000'; // Fallback if empty
-    const whatsappUrl = `https://wa.me/${targetNumber}?text=${encodedMessage}`;
+    const targetNumber = BUSINESS_CONFIG.whatsappNumber;
 
-    // Simulate a brief processing time for polished UX
     setTimeout(() => {
       setIsSubmitting(false);
       setShowConfirmation(true);
+      clearCart(); // Clear cart after attaching selection to catering request
       
-      // Open WhatsApp in a new tab
-      window.open(whatsappUrl, '_blank');
+      if (targetNumber) {
+        window.open(`https://wa.me/${targetNumber}?text=${encodedMessage}`, '_blank');
+      }
     }, 1500);
   };
 
@@ -176,10 +200,25 @@ I would like to discuss the available options. Thank you.`;
                     <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-6 text-green-600 shadow-sm">
                       <Send className="w-8 h-8" />
                     </div>
-                    <h3 className="text-2xl font-serif text-deep-wine mb-4">Your enquiry has been prepared!</h3>
-                    <p className="text-espresso-text/80 mb-6">
-                      A WhatsApp window has been opened with your structured request. Please hit 'Send' in WhatsApp to connect directly with the HoneyMarve team.
-                    </p>
+                    <span className="text-muted-honey-gold text-sm font-sans tracking-[0.2em] uppercase mb-4 block">Request Saved</span>
+                    <h3 className="text-2xl font-serif text-deep-wine mb-4">Your enquiry has been prepared.</h3>
+                    <div className="bg-white py-3 px-6 rounded-xl inline-block mb-6 border border-soft-cream shadow-sm">
+                      <span className="text-xs text-espresso-text/60 uppercase tracking-wider block mb-1">Reference Number</span>
+                      <span className="text-lg font-medium tracking-wide text-primary-burgundy">{reference}</span>
+                    </div>
+                    
+                    <div className="max-w-md mx-auto">
+                      {!BUSINESS_CONFIG.whatsappNumber ? (
+                        <div className="bg-amber-50 text-amber-800 p-4 rounded-xl text-sm mb-6 border border-amber-200">
+                          WhatsApp ordering will be activated once the official order line is confirmed. Your request has been recorded.
+                        </div>
+                      ) : (
+                        <p className="text-espresso-text/80 mb-6 text-sm">
+                          A WhatsApp window has been opened with your structured request. Please hit 'Send' in WhatsApp to connect directly with the HoneyMarve team.
+                        </p>
+                      )}
+                    </div>
+                    
                     <button 
                       onClick={() => setShowConfirmation(false)}
                       className="text-sm font-medium text-primary-burgundy hover:text-deep-wine transition-colors underline underline-offset-4"
@@ -303,7 +342,7 @@ I would like to discuss the available options. Thank you.`;
                         <span className="animate-pulse">Preparing Enquiry...</span>
                       ) : (
                         <>
-                          Continue to WhatsApp
+                          Save & Continue to WhatsApp
                           <Send className="w-4 h-4 ml-2" />
                         </>
                       )}
